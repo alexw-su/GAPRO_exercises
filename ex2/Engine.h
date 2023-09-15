@@ -1,7 +1,3 @@
-//
-// Created by thorl on 12/09/2023.
-//
-
 #ifndef GAMEPROGRAMMING23_EXERCISES_ENGINE_H
 #define GAMEPROGRAMMING23_EXERCISES_ENGINE_H
 #include <chrono>
