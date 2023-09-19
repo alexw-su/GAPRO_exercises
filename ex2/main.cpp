@@ -1,57 +1,113 @@
 #include <chrono>
-#include <vector>
 
 #include "ITUGames.h"
 #include "Engine.h"
 #include "Score.h"
 #include "Player.h"
+#include "Collectible.h"
+#include "Renderer.h"
+
 using namespace std;
 
-const int FRAME_RATE = 5;
+const int FRAME_RATE = 1;
 const chrono::duration<double> MS_PER_FRAME{ 1000.0 / FRAME_RATE / 1000.0 };
 const int PLAYER_START_X = 20;
 const int PLAYER_START_Y = 20;
+const int PLAY_AREA_MARGINS = 5;
 
-void ProcessEvents();
+bool ProcessEvents();
 void Update();
 void Render();
+
 
 Engine engine = Engine();
 Player player = Player(PLAYER_START_X, PLAYER_START_Y);
 Score score = Score();
+Collectible collectible = Collectible(
+            PLAY_AREA_MARGINS,
+            PLAY_AREA_MARGINS,
+            engine.GetScreenWidth(),
+            engine.GetScreenHeight(),
+            player
+        );
+Renderer renderer = Renderer(
+        engine.GetScreenWidth(),
+        engine.GetScreenHeight()
+        );
 
 int main() {
     ITUGames::Console::InitScreenForRendering();
-	while(true) {
-		ProcessEvents();
+    ITUGames::Console::HideCursor();
+    bool quit = false;
+	while(!quit) {
+        engine.Init();
+		quit = ProcessEvents();
 		Update();
 		Render();
-
-        chrono::duration<double> computation_time = engine.GetTimeComputationMS();
-
-        ITUGames::Utils::PreciseSleep(MS_PER_FRAME - computation_time);
-
+        engine.setComputationTime();
+        ITUGames::Utils::PreciseSleep(MS_PER_FRAME - engine.GetTimeComputation());
+        engine.setElapsed();
     }
 	return 0;
 }
 
-void ProcessEvents()
+bool ProcessEvents()
 {
-    unsigned char input = ITUGames::Console::GetCharacter(false);
-    engine.ProcessEvent();
-    player.ProcessEvent(input);
+    bool engine_state = engine.ProcessEvent();
+    player.ProcessEvent(engine.input);
+    return engine_state;
 }
 
-void Update()
-{
-    engine.Update();
-    player.Update(/*todo*/);
-    score.Update();
+void Update() {
+    player.Update();
+    // check death
+    if (player.IsOverlapping()) {
+        ++score.deaths;
+        score.wins = 0;
+        ITUGames::Console::ClearScreen();
+        player = Player(PLAYER_START_X, PLAYER_START_Y);
+        collectible = Collectible(
+                PLAY_AREA_MARGINS,
+                PLAY_AREA_MARGINS,
+                engine.GetScreenWidth() - PLAY_AREA_MARGINS,
+                engine.GetScreenHeight() - PLAY_AREA_MARGINS,
+                player
+        );
+    }
+    // check collection
+    cout << "player x: " << player.GetPosX() << endl;
+    cout << "player y: " << player.GetPosY() << endl;
+    cout << "c x: " << collectible.GetPosX() << endl;
+    cout << "c y: " << collectible.GetPosY() << endl;
+    if (
+            player.GetPosX() == collectible.GetPosX() &&
+            player.GetPosY() == collectible.GetPosY()
+    ) {
+        ++score.wins;
+        player.Grow();
+        renderer.erase(collectible.GetPosX(), collectible.GetPosY());
+        collectible = Collectible(
+                PLAY_AREA_MARGINS,
+                PLAY_AREA_MARGINS,
+                engine.GetScreenWidth() - PLAY_AREA_MARGINS,
+                engine.GetScreenHeight() - PLAY_AREA_MARGINS,
+                player
+        );
+
+    }
 }
 
 void Render()
 {
-    engine.Render();
-    player.Render();
-    score.Render();
+    engine.Render(renderer);
+    player.Render(renderer);
+    score.Render(renderer);
+    collectible.Render(renderer);
+    for(auto& instruction : renderer.instructions){
+        char c = get<0>(instruction);
+        int x = get<1>(instruction);
+        int y = get<2>(instruction);
+        ITUGames::Console::RenderCharacter(c, x, y);
+    }
+    renderer.instructions.clear();
 }
