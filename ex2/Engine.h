@@ -2,6 +2,7 @@
 #define GAMEPROGRAMMING23_EXERCISES_ENGINE_H
 #include <chrono>
 #include "Renderer.h"
+#include "ITUGames.h"
 
 using namespace std;
 

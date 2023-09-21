@@ -1,6 +1,8 @@
 #ifndef EX2_RENDERER_H
 #define EX2_RENDERER_H
 #include <vector>
+#include <tuple>
+#include <string>
 using namespace std;
 
 struct Renderer{
