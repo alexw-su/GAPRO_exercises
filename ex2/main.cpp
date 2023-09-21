@@ -75,10 +75,6 @@ void Update() {
         );
     }
     // check collection
-    cout << "player x: " << player.GetPosX() << endl;
-    cout << "player y: " << player.GetPosY() << endl;
-    cout << "c x: " << collectible.GetPosX() << endl;
-    cout << "c y: " << collectible.GetPosY() << endl;
     if (
             player.GetPosX() == collectible.GetPosX() &&
             player.GetPosY() == collectible.GetPosY()

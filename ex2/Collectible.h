@@ -5,6 +5,7 @@ private:
     int x, y;
 public:
     Collectible(int margins_width, int margins_height, int screen_width, int screen_height, Player& player) {
+        if(screen_height > 30) screen_height = 30;
         do{
             x = (rand() % (screen_width)) + margins_width;
             y = (rand() % (screen_height)) + margins_height;
